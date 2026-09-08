@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS command_logs;
+DROP TABLE IF EXISTS alerts;
+DROP TABLE IF EXISTS ai_evaluations;
+DROP TABLE IF EXISTS telemetry_logs;
+DROP TABLE IF EXISTS sensors;
+DROP TABLE IF EXISTS machines;
+DROP TABLE IF EXISTS users;

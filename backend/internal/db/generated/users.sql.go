@@ -9,20 +9,31 @@ import (
 	"context"
 )
 
+const countUsers = `-- name: CountUsers :one
+SELECT COUNT(*) AS count FROM users
+`
+
+func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countUsers)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (username, password_hash, role)
-VALUES ($1, $2, COALESCE($3, 'OPERATOR'))
+VALUES ($1, $2, $3)
 RETURNING user_id, username, password_hash, role, created_at
 `
 
 type CreateUserParams struct {
-	Username     string      `json:"username"`
-	PasswordHash string      `json:"password_hash"`
-	Column3      interface{} `json:"column_3"`
+	Username     string `json:"username"`
+	PasswordHash string `json:"password_hash"`
+	Role         string `json:"role"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, createUser, arg.Username, arg.PasswordHash, arg.Column3)
+	row := q.db.QueryRow(ctx, createUser, arg.Username, arg.PasswordHash, arg.Role)
 	var i User
 	err := row.Scan(
 		&i.UserID,

@@ -1,6 +1,6 @@
 -- name: CreateUser :one
 INSERT INTO users (username, password_hash, role)
-VALUES ($1, $2, COALESCE($3, 'OPERATOR'))
+VALUES ($1, $2, $3)
 RETURNING *;
 
 -- name: GetUserByUsername :one
@@ -24,3 +24,6 @@ RETURNING *;
 -- name: DeleteUser :exec
 DELETE FROM users
 WHERE user_id = $1;
+
+-- name: CountUsers :one
+SELECT COUNT(*) AS count FROM users;

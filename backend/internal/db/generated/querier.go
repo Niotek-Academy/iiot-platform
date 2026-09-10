@@ -30,6 +30,7 @@ type Querier interface {
 	ListAlertsByMachineAndStatus(ctx context.Context, arg ListAlertsByMachineAndStatusParams) ([]Alert, error)
 	ListCommandLogsByMachine(ctx context.Context, arg ListCommandLogsByMachineParams) ([]CommandLog, error)
 	ListMachines(ctx context.Context) ([]Machine, error)
+	ListSensors(ctx context.Context) ([]Sensor, error)
 	ListSensorsByMachine(ctx context.Context, machineID string) ([]Sensor, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	ResolveAlert(ctx context.Context, alertID int64) (Alert, error)

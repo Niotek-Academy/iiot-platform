@@ -1,6 +1,6 @@
 -- name: CreateMachine :one
 INSERT INTO machines (machine_id, name, location, status)
-VALUES ($1, $2, $3, COALESCE($4, 'OPERATIONAL'))
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: GetMachine :one

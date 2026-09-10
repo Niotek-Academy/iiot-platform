@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/apperr"
-	"github.com/Niotek-Academy/iiot-platform/backend/internal/jwtutil"
+	"github.com/Niotek-Academy/iiot-platform/backend/internal/utils/jwtutil"
 )
 
 // Auth requires a valid "Authorization: Bearer <token>" header. On success

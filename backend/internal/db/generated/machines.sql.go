@@ -13,15 +13,15 @@ import (
 
 const createMachine = `-- name: CreateMachine :one
 INSERT INTO machines (machine_id, name, location, status)
-VALUES ($1, $2, $3, COALESCE($4, 'OPERATIONAL'))
+VALUES ($1, $2, $3, $4)
 RETURNING machine_id, name, location, status, created_at
 `
 
 type CreateMachineParams struct {
-	MachineID string      `json:"machine_id"`
-	Name      string      `json:"name"`
-	Location  string      `json:"location"`
-	Column4   interface{} `json:"column_4"`
+	MachineID string `json:"machine_id"`
+	Name      string `json:"name"`
+	Location  string `json:"location"`
+	Status    string `json:"status"`
 }
 
 func (q *Queries) CreateMachine(ctx context.Context, arg CreateMachineParams) (Machine, error) {
@@ -29,7 +29,7 @@ func (q *Queries) CreateMachine(ctx context.Context, arg CreateMachineParams) (M
 		arg.MachineID,
 		arg.Name,
 		arg.Location,
-		arg.Column4,
+		arg.Status,
 	)
 	var i Machine
 	err := row.Scan(

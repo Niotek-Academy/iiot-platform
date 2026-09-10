@@ -15,3 +15,7 @@ ORDER BY created_at ASC;
 -- name: DeleteSensor :exec
 DELETE FROM sensors
 WHERE sensor_id = $1;
+
+-- name: ListSensors :many
+SELECT * FROM sensors
+ORDER BY created_at ASC;

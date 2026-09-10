@@ -68,6 +68,37 @@ func (q *Queries) GetSensor(ctx context.Context, sensorID string) (Sensor, error
 	return i, err
 }
 
+const listSensors = `-- name: ListSensors :many
+SELECT sensor_id, machine_id, metric_name, unit, created_at FROM sensors
+ORDER BY created_at ASC
+`
+
+func (q *Queries) ListSensors(ctx context.Context) ([]Sensor, error) {
+	rows, err := q.db.Query(ctx, listSensors)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Sensor
+	for rows.Next() {
+		var i Sensor
+		if err := rows.Scan(
+			&i.SensorID,
+			&i.MachineID,
+			&i.MetricName,
+			&i.Unit,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSensorsByMachine = `-- name: ListSensorsByMachine :many
 SELECT sensor_id, machine_id, metric_name, unit, created_at FROM sensors
 WHERE machine_id = $1

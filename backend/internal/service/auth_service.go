@@ -9,7 +9,7 @@ import (
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/apperr"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/db"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/db/generated"
-	"github.com/Niotek-Academy/iiot-platform/backend/internal/jwtutil"
+	"github.com/Niotek-Academy/iiot-platform/backend/internal/utils/jwtutil"
 )
 
 type AuthService struct {

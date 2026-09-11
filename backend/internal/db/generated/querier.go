@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	CountUnresolvedAlerts(ctx context.Context, machineID string) (int64, error)
 	CountUsers(ctx context.Context) (int64, error)
 	CreateAlert(ctx context.Context, arg CreateAlertParams) (Alert, error)
 	CreateCommandLog(ctx context.Context, arg CreateCommandLogParams) (CommandLog, error)

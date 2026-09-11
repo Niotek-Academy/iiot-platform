@@ -24,3 +24,14 @@ type MachineResponse struct {
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type MachineOverviewResponse struct {
+	MachineID          string    `json:"machine_id"`
+	Name               string    `json:"name"`
+	Location           string    `json:"location"`
+	Status             string    `json:"status"`
+	CurrentHealthScore *float64  `json:"current_health_score"` 
+	RULHours           *float64  `json:"rul_hours"`            
+	ActiveAlertsCount  int64     `json:"active_alerts_count"`
+	UpdatedAt          time.Time `json:"updated_at"`
+}

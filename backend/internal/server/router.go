@@ -27,6 +27,12 @@ func NewRouter(store *db.Store, cfg config.Config) *gin.Engine {
 	sensorService := service.NewSensorService(store)
 	sensorHandler := handlers.NewSensorHandler(sensorService)
 
+	alertService := service.NewAlertService(store)
+	alertHandler := handlers.NewAlertHandler(alertService)
+
+	telemetryService := service.NewTelemetryService(store)
+	telemetryHandler := handlers.NewTelemetryHandler(telemetryService)
+
 	r.GET("/healthz", handlers.HealthCheck(store))
 
 	api := r.Group("/api/v1")
@@ -53,6 +59,14 @@ func NewRouter(store *db.Store, cfg config.Config) *gin.Engine {
 				sensors.GET("/:sensor_id", sensorHandler.GetByID)
 				sensors.GET("", sensorHandler.List) // ?machine_id=...
 				sensors.DELETE("/:sensor_id", sensorHandler.Delete)
+			}
+			
+			authed := api.Group("")
+			authed.Use(middleware.Auth(jwtSecret))
+			{
+				authed.GET("/machines/:machine_id", machineHandler.GetOverview)
+				authed.GET("/telemetry", telemetryHandler.GetHistory)
+				authed.GET("/alerts", alertHandler.List)
 			}
 		}
 	}

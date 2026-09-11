@@ -9,6 +9,18 @@ import (
 	"context"
 )
 
+const countUnresolvedAlerts = `-- name: CountUnresolvedAlerts :one
+SELECT COUNT(*) FROM alerts
+WHERE machine_id = $1 AND is_resolved = FALSE
+`
+
+func (q *Queries) CountUnresolvedAlerts(ctx context.Context, machineID string) (int64, error) {
+	row := q.db.QueryRow(ctx, countUnresolvedAlerts, machineID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createAlert = `-- name: CreateAlert :one
 INSERT INTO alerts (machine_id, severity, message)
 VALUES ($1, $2, $3)

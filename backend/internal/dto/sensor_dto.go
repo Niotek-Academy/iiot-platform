@@ -7,6 +7,7 @@ type CreateSensorRequest struct {
 	MachineID  string `json:"machine_id" binding:"required"`
 	MetricName string `json:"metric_name" binding:"required,max=50"`
 	Unit       string `json:"unit" binding:"required,max=20"`
+	SourceAddress *string `json:"source_address" binding:"omitempty,max=100"`
 }
 
 type SensorResponse struct {
@@ -14,5 +15,6 @@ type SensorResponse struct {
 	MachineID  string    `json:"machine_id"`
 	MetricName string    `json:"metric_name"`
 	Unit       string    `json:"unit"`
+	SourceAddress *string   `json:"source_address,omitempty"`
 	CreatedAt  time.Time `json:"created_at"`
 }

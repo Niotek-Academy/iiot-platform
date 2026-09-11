@@ -4,16 +4,22 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 )
 
-// Config holds everything the backend needs to boot.
 type Config struct {
-	DatabaseURL string
-	ServerAddr  string
+	DatabaseURL    string
+	ServerAddr     string
 	JWTSecret      string
 	JWTExpiryHours int
+
+	// Phase 4 — telemetry ingestion
+	FactoryIOMode    string // "simulator" or "opcua"
+	OPCUAEndpoint    string
+	BufferCapacity   int
+	SnapshotInterval time.Duration
 }
 
 func LoadConfig() Config {
@@ -36,6 +42,11 @@ func LoadConfig() Config {
 		ServerAddr:     getEnv("SERVER_ADDR", ":8080"),
 		JWTSecret:      jwtSecret,
 		JWTExpiryHours: getEnvInt("JWT_EXPIRY_HOURS", 12),
+
+		FactoryIOMode:    getEnv("FACTORYIO_MODE", "simulator"),
+		OPCUAEndpoint:    getEnv("OPCUA_ENDPOINT", "opc.tcp://localhost:4840"),
+		BufferCapacity:   getEnvInt("BUFFER_CAPACITY", 30),
+		SnapshotInterval: time.Duration(getEnvInt("SNAPSHOT_INTERVAL_SECONDS", 1)) * time.Second,
 	}
 }
 

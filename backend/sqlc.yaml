@@ -4,6 +4,7 @@ sql:
     queries: "internal/db/queries"
     schema:
       - "internal/db/migrations/000001_init_schema.up.sql"
+      - "internal/db/migrations/000002_add_sensor_source_address.up.sql"
     gen:
       go:
         package: "generated"

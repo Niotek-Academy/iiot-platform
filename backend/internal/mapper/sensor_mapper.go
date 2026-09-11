@@ -6,13 +6,17 @@ import (
 )
 
 func ToSensorResponse(s generated.Sensor) dto.SensorResponse {
-	return dto.SensorResponse{
+	resp := dto.SensorResponse{
 		SensorID:   s.SensorID,
 		MachineID:  s.MachineID,
 		MetricName: s.MetricName,
 		Unit:       s.Unit,
 		CreatedAt:  s.CreatedAt.Time,
 	}
+	if s.SourceAddress.Valid {
+		resp.SourceAddress = &s.SourceAddress.String
+	}
+	return resp
 }
 
 func ToSensorResponseList(list []generated.Sensor) []dto.SensorResponse {

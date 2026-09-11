@@ -1,0 +1,1 @@
+ALTER TABLE sensors ADD COLUMN source_address VARCHAR(100);

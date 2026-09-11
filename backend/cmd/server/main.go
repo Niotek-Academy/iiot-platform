@@ -10,6 +10,8 @@ import (
 
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/config"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/db"
+	"github.com/Niotek-Academy/iiot-platform/backend/internal/factoryio"
+	"github.com/Niotek-Academy/iiot-platform/backend/internal/ingestion"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/server"
 )
 
@@ -27,12 +29,39 @@ func main() {
 	defer store.Close()
 	log.Printf("database connection established")
 
-	router := server.NewRouter(store, cfg)   // Gin Engine
+	// --- Phase 4: telemetry ingestion ---
+	manager := ingestion.NewManager(store, cfg.BufferCapacity, cfg.SnapshotInterval)
+	if err := manager.LoadSensorMap(ctx); err != nil {
+		log.Fatalf("failed to load sensor map: %v", err)
+	}
+
+	var ioClient factoryio.Client
+	switch cfg.FactoryIOMode {
+	case "opcua":
+		nodeIDs := manager.SensorAddresses()
+		if len(nodeIDs) == 0 {
+			log.Println("warning: no sensors have a source_address set — opcua client will have nothing to subscribe to")
+		}
+		ioClient = factoryio.NewOPCUAClient(cfg.OPCUAEndpoint, nodeIDs)
+		log.Printf("factory IO mode: opcua (%s), %d sensors mapped", cfg.OPCUAEndpoint, len(nodeIDs))
+	default:
+		ioClient = factoryio.NewSimulatorClient(time.Second)
+		log.Printf("factory IO mode: simulator")
+	}
+
+	go func() {
+		if err := manager.Run(ctx, ioClient); err != nil {
+			log.Printf("ingestion manager stopped: %v", err)
+		}
+	}()
+	// --- end Phase 4 wiring ---
+
+	router := server.NewRouter(store, cfg)
 
 	srv := &http.Server{
 		Addr:              cfg.ServerAddr,
 		Handler:           router,
-		ReadHeaderTimeout: 5 * time.Second,  // recomendation from the Ai to protect from Slowloris attacks (محتاج اقرا عنها )
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	go func() {

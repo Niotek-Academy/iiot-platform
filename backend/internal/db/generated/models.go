@@ -44,11 +44,12 @@ type Machine struct {
 }
 
 type Sensor struct {
-	SensorID   string             `json:"sensor_id"`
-	MachineID  string             `json:"machine_id"`
-	MetricName string             `json:"metric_name"`
-	Unit       string             `json:"unit"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	SensorID      string             `json:"sensor_id"`
+	MachineID     string             `json:"machine_id"`
+	MetricName    string             `json:"metric_name"`
+	Unit          string             `json:"unit"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	SourceAddress pgtype.Text        `json:"source_address"`
 }
 
 type TelemetryLog struct {

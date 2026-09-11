@@ -7,19 +7,22 @@ package generated
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createSensor = `-- name: CreateSensor :one
-INSERT INTO sensors (sensor_id, machine_id, metric_name, unit)
-VALUES ($1, $2, $3, $4)
-RETURNING sensor_id, machine_id, metric_name, unit, created_at
+INSERT INTO sensors (sensor_id, machine_id, metric_name, unit, source_address)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING sensor_id, machine_id, metric_name, unit, created_at, source_address
 `
 
 type CreateSensorParams struct {
-	SensorID   string `json:"sensor_id"`
-	MachineID  string `json:"machine_id"`
-	MetricName string `json:"metric_name"`
-	Unit       string `json:"unit"`
+	SensorID      string      `json:"sensor_id"`
+	MachineID     string      `json:"machine_id"`
+	MetricName    string      `json:"metric_name"`
+	Unit          string      `json:"unit"`
+	SourceAddress pgtype.Text `json:"source_address"`
 }
 
 func (q *Queries) CreateSensor(ctx context.Context, arg CreateSensorParams) (Sensor, error) {
@@ -28,6 +31,7 @@ func (q *Queries) CreateSensor(ctx context.Context, arg CreateSensorParams) (Sen
 		arg.MachineID,
 		arg.MetricName,
 		arg.Unit,
+		arg.SourceAddress,
 	)
 	var i Sensor
 	err := row.Scan(
@@ -36,6 +40,7 @@ func (q *Queries) CreateSensor(ctx context.Context, arg CreateSensorParams) (Sen
 		&i.MetricName,
 		&i.Unit,
 		&i.CreatedAt,
+		&i.SourceAddress,
 	)
 	return i, err
 }
@@ -51,7 +56,7 @@ func (q *Queries) DeleteSensor(ctx context.Context, sensorID string) error {
 }
 
 const getSensor = `-- name: GetSensor :one
-SELECT sensor_id, machine_id, metric_name, unit, created_at FROM sensors
+SELECT sensor_id, machine_id, metric_name, unit, created_at, source_address FROM sensors
 WHERE sensor_id = $1
 `
 
@@ -64,12 +69,45 @@ func (q *Queries) GetSensor(ctx context.Context, sensorID string) (Sensor, error
 		&i.MetricName,
 		&i.Unit,
 		&i.CreatedAt,
+		&i.SourceAddress,
 	)
 	return i, err
 }
 
+const listAllSensors = `-- name: ListAllSensors :many
+SELECT sensor_id, machine_id, metric_name, unit, created_at, source_address FROM sensors
+ORDER BY machine_id, created_at ASC
+`
+
+func (q *Queries) ListAllSensors(ctx context.Context) ([]Sensor, error) {
+	rows, err := q.db.Query(ctx, listAllSensors)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Sensor
+	for rows.Next() {
+		var i Sensor
+		if err := rows.Scan(
+			&i.SensorID,
+			&i.MachineID,
+			&i.MetricName,
+			&i.Unit,
+			&i.CreatedAt,
+			&i.SourceAddress,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSensors = `-- name: ListSensors :many
-SELECT sensor_id, machine_id, metric_name, unit, created_at FROM sensors
+SELECT sensor_id, machine_id, metric_name, unit, created_at, source_address FROM sensors
 ORDER BY created_at ASC
 `
 
@@ -88,6 +126,7 @@ func (q *Queries) ListSensors(ctx context.Context) ([]Sensor, error) {
 			&i.MetricName,
 			&i.Unit,
 			&i.CreatedAt,
+			&i.SourceAddress,
 		); err != nil {
 			return nil, err
 		}
@@ -100,7 +139,7 @@ func (q *Queries) ListSensors(ctx context.Context) ([]Sensor, error) {
 }
 
 const listSensorsByMachine = `-- name: ListSensorsByMachine :many
-SELECT sensor_id, machine_id, metric_name, unit, created_at FROM sensors
+SELECT sensor_id, machine_id, metric_name, unit, created_at, source_address FROM sensors
 WHERE machine_id = $1
 ORDER BY created_at ASC
 `
@@ -120,6 +159,7 @@ func (q *Queries) ListSensorsByMachine(ctx context.Context, machineID string) ([
 			&i.MetricName,
 			&i.Unit,
 			&i.CreatedAt,
+			&i.SourceAddress,
 		); err != nil {
 			return nil, err
 		}

@@ -28,6 +28,7 @@ type Querier interface {
 	InsertTelemetry(ctx context.Context, arg InsertTelemetryParams) (TelemetryLog, error)
 	ListAlertsByMachine(ctx context.Context, machineID string) ([]Alert, error)
 	ListAlertsByMachineAndStatus(ctx context.Context, arg ListAlertsByMachineAndStatusParams) ([]Alert, error)
+	ListAllSensors(ctx context.Context) ([]Sensor, error)
 	ListCommandLogsByMachine(ctx context.Context, arg ListCommandLogsByMachineParams) ([]CommandLog, error)
 	ListMachines(ctx context.Context) ([]Machine, error)
 	ListSensors(ctx context.Context) ([]Sensor, error)

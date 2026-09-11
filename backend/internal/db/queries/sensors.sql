@@ -1,6 +1,6 @@
 -- name: CreateSensor :one
-INSERT INTO sensors (sensor_id, machine_id, metric_name, unit)
-VALUES ($1, $2, $3, $4)
+INSERT INTO sensors (sensor_id, machine_id, metric_name, unit, source_address)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- name: GetSensor :one
@@ -19,3 +19,7 @@ WHERE sensor_id = $1;
 -- name: ListSensors :many
 SELECT * FROM sensors
 ORDER BY created_at ASC;
+
+-- name: ListAllSensors :many
+SELECT * FROM sensors
+ORDER BY machine_id, created_at ASC;

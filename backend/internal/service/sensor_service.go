@@ -7,6 +7,7 @@ import (
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/db"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/db/generated"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/dto"
+	"github.com/Niotek-Academy/iiot-platform/backend/internal/utils/pgutil"
 )
 
 type SensorService struct {
@@ -26,16 +27,18 @@ func (s *SensorService) Create(ctx context.Context, req dto.CreateSensorRequest)
 	}
 
 	sensor, err := s.store.CreateSensor(ctx, generated.CreateSensorParams{
-		SensorID:   req.SensorID,
-		MachineID:  req.MachineID,
-		MetricName: req.MetricName,
-		Unit:       req.Unit,
+		SensorID:      req.SensorID,
+		MachineID:     req.MachineID,
+		MetricName:    req.MetricName,
+		Unit:          req.Unit,
+		SourceAddress: pgutil.ToText(req.SourceAddress),
 	})
 	if err != nil {
 		return generated.Sensor{}, apperr.NewInternal("could not create sensor")
 	}
 	return sensor, nil
 }
+
 
 // ListSensors returns all sensors when machineID is empty, otherwise only
 // the sensors belonging to that machine.

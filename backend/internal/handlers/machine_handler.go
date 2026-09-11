@@ -63,3 +63,13 @@ func (h *MachineHandler) Delete(c *gin.Context) {
 	}
 	response.Success(c, http.StatusOK, gin.H{"deleted": machineID})
 }
+
+func (h *MachineHandler) GetOverview(c *gin.Context) {
+	machineID := c.Param("machine_id")
+	overview, err := h.service.GetOverview(c.Request.Context(), machineID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	response.Success(c, http.StatusOK, overview)
+}

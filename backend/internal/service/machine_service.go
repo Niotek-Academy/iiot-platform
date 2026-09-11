@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/apperr"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/db"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/db/generated"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/dto"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/utils/pgutil"
+	"github.com/jackc/pgx/v5"
 )
 
 type MachineService struct {
@@ -73,4 +75,39 @@ func (s *MachineService) Delete(ctx context.Context, machineID string) error {
 		return apperr.NewInternal("could not delete machine")
 	}
 	return nil
+}
+
+func (s *MachineService) GetOverview(ctx context.Context, machineID string) (dto.MachineOverviewResponse, error) {
+	machine, err := s.store.GetMachine(ctx, machineID)
+	if err != nil {
+		return dto.MachineOverviewResponse{}, apperr.NewNotFound("machine not found")
+	}
+
+	overview := dto.MachineOverviewResponse{
+		MachineID: machine.MachineID,
+		Name:      machine.Name,
+		Location:  machine.Location,
+		Status:    machine.Status,
+		UpdatedAt: machine.CreatedAt.Time, // overwritten below if an AI evaluation exists
+	}
+
+	
+	eval, err := s.store.GetLatestAIEvaluation(ctx, machineID)
+	if err == nil {
+		healthScore := eval.HealthScore
+		rulHours := eval.RulHours
+		overview.CurrentHealthScore = &healthScore
+		overview.RULHours = &rulHours
+		overview.UpdatedAt = eval.EvaluatedAt.Time
+	} else if !errors.Is(err, pgx.ErrNoRows) {
+		return dto.MachineOverviewResponse{}, apperr.NewInternal("could not fetch machine health data")
+	}
+
+	count, err := s.store.CountUnresolvedAlerts(ctx, machineID)
+	if err != nil {
+		return dto.MachineOverviewResponse{}, apperr.NewInternal("could not count alerts")
+	}
+	overview.ActiveAlertsCount = count
+
+	return overview, nil
 }

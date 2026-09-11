@@ -19,3 +19,7 @@ UPDATE alerts
 SET is_resolved = TRUE
 WHERE alert_id = $1
 RETURNING *;
+
+-- name: CountUnresolvedAlerts :one
+SELECT COUNT(*) FROM alerts
+WHERE machine_id = $1 AND is_resolved = FALSE;

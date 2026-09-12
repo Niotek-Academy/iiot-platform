@@ -20,6 +20,11 @@ type Config struct {
 	OPCUAEndpoint    string
 	BufferCapacity   int
 	SnapshotInterval time.Duration
+
+	// Phase 6 - Ai
+	AIServiceMode        string // "mock" or "http"
+	AIServiceURL         string
+	AIEvalIntervalSeconds int
 }
 
 func LoadConfig() Config {
@@ -47,6 +52,10 @@ func LoadConfig() Config {
 		OPCUAEndpoint:    getEnv("OPCUA_ENDPOINT", "opc.tcp://localhost:4840"),
 		BufferCapacity:   getEnvInt("BUFFER_CAPACITY", 30),
 		SnapshotInterval: time.Duration(getEnvInt("SNAPSHOT_INTERVAL_SECONDS", 1)) * time.Second,
+
+		AIServiceMode:         getEnv("AI_SERVICE_MODE", "mock"),
+		AIServiceURL:          getEnv("AI_SERVICE_URL", "http://localhost:9000"),
+		AIEvalIntervalSeconds: getEnvInt("AI_EVAL_INTERVAL_SECONDS", 5),
 	}
 }
 

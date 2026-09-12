@@ -170,3 +170,17 @@ func (m *Manager) Window(machineID string) ([]Snapshot, bool) {
 	}
 	return buf.Window(), true
 }
+
+// KnownMachines returns the machine_ids that currently have at least one
+// reading (i.e. have an active state/buffer). Used by the WebSocket
+// broadcaster to avoid a DB call on every tick.
+func (m *Manager) KnownMachines() []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	out := make([]string, 0, len(m.states))
+	for id := range m.states {
+		out = append(out, id)
+	}
+	return out
+}

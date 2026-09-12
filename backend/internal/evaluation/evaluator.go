@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -23,10 +24,18 @@ type Evaluator struct {
 	ingest   *ingestion.Manager // to get the window of each machine
 	aiClient aiclient.AIClient
 	interval time.Duration   // time between evaluations
+	mu     sync.RWMutex
+	latest map[string]aiclient.PredictResponse
 }
 
 func NewEvaluator(store *db.Store, ingest *ingestion.Manager, client aiclient.AIClient, interval time.Duration) *Evaluator {
-	return &Evaluator{store: store, ingest: ingest, aiClient: client, interval: interval}
+	return &Evaluator{
+		store:    store,
+		ingest:   ingest,
+		aiClient: client,
+		interval: interval,
+		latest:   make(map[string]aiclient.PredictResponse),
+	}
 }
 
 // Run blocks until ctx is cancelled — call it in a goroutine from main.go.
@@ -72,6 +81,9 @@ func (e *Evaluator) evaluateOne(ctx context.Context, machineID string) {
 		log.Printf("evaluation: predict failed for %s: %v", machineID, err)
 		return
 	}
+	e.mu.Lock()
+	e.latest[machineID] = resp
+	e.mu.Unlock()
 
 	if _, err := e.store.InsertAIEvaluation(ctx, generated.InsertAIEvaluationParams{
 		MachineID:   machineID,
@@ -120,4 +132,11 @@ func toTelemetryPoints(window []ingestion.Snapshot) []aiclient.TelemetryPoint {
 		})
 	}
 	return points
+}
+
+func (e *Evaluator) Latest(machineID string) (aiclient.PredictResponse, bool) {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	resp, ok := e.latest[machineID]
+	return resp, ok
 }

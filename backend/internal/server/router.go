@@ -8,9 +8,10 @@ import (
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/handlers"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/middleware"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/service"
+	"github.com/Niotek-Academy/iiot-platform/backend/internal/ws"
 )
 
-func NewRouter(store *db.Store, cfg config.Config) *gin.Engine {
+func NewRouter(store *db.Store, cfg config.Config, hub *ws.Hub) *gin.Engine {
 	r := gin.New()
 	r.Use(middleware.Recovery())
 	r.Use(gin.Logger())
@@ -34,6 +35,7 @@ func NewRouter(store *db.Store, cfg config.Config) *gin.Engine {
 	telemetryHandler := handlers.NewTelemetryHandler(telemetryService)
 
 	r.GET("/healthz", handlers.HealthCheck(store))
+	r.GET("/ws/v1/factory-stream", ws.ServeWS(hub, jwtSecret))
 
 	api := r.Group("/api/v1")
 	{

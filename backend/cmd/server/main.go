@@ -8,8 +8,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Niotek-Academy/iiot-platform/backend/internal/aiclient"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/config"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/db"
+	"github.com/Niotek-Academy/iiot-platform/backend/internal/evaluation"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/factoryio"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/ingestion"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/server"
@@ -55,6 +57,21 @@ func main() {
 		}
 	}()
 	// --- end Phase 4 wiring ---
+
+	// --- Phase 6: AI evaluation ---
+	var aiClient aiclient.AIClient
+	switch cfg.AIServiceMode {
+	case "http":
+		aiClient = aiclient.NewHTTPAIClient(cfg.AIServiceURL)
+		log.Printf("AI service mode: http (%s)", cfg.AIServiceURL)
+	default:
+		aiClient = aiclient.NewMockAIClient()
+		log.Printf("AI service mode: mock")
+	}
+
+	evaluator := evaluation.NewEvaluator(store, manager, aiClient, time.Duration(cfg.AIEvalIntervalSeconds)*time.Second)
+	go evaluator.Run(ctx)
+	// --- end Phase 6: AI evaluation ---
 
 	router := server.NewRouter(store, cfg)
 

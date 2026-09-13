@@ -18,6 +18,18 @@ func NewCommandHandler(s *service.CommandService) *CommandHandler {
 	return &CommandHandler{service: s}
 }
 
+// Execute godoc
+// @Summary      Send a control command to a machine
+// @Description  issued_by is taken from the JWT, never from the request body
+// @Tags         commands
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        machine_id path string true "Machine ID"
+// @Param        request body dto.CommandRequest true "Command"
+// @Success      200  {object}  response.Envelope{data=dto.CommandResponse}
+// @Failure      404  {object}  response.Envelope
+// @Router       /machines/{machine_id}/command [post]
 func (h *CommandHandler) Execute(c *gin.Context) {
 	machineID := c.Param("machine_id")
 

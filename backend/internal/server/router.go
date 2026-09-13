@@ -10,6 +10,11 @@ import (
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/middleware"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/service"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/ws"
+
+	swaggerFiles "github.com/swaggo/files"
+    ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "github.com/Niotek-Academy/iiot-platform/backend/docs"
 )
 
 func NewRouter(store *db.Store, cfg config.Config, hub *ws.Hub, ioClient factoryio.ControlClient) *gin.Engine {
@@ -40,6 +45,7 @@ func NewRouter(store *db.Store, cfg config.Config, hub *ws.Hub, ioClient factory
 
 	r.GET("/healthz", handlers.HealthCheck(store))
 	r.GET("/ws/v1/factory-stream", ws.ServeWS(hub, jwtSecret))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	api := r.Group("/api/v1")
 	{

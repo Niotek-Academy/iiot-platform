@@ -24,6 +24,16 @@ func NewTelemetryHandler(s *service.TelemetryService) *TelemetryHandler {
 	return &TelemetryHandler{service: s}
 }
 
+// GetHistory godoc
+// @Summary      Historical telemetry for one sensor
+// @Tags         telemetry
+// @Security     BearerAuth
+// @Produce      json
+// @Param        sensor_id query string true  "Sensor ID"
+// @Param        limit     query int    false "Max data points (default 50, max 1000)"
+// @Success      200  {object}  response.Envelope{data=dto.TelemetryResponse}
+// @Failure      404  {object}  response.Envelope
+// @Router       /telemetry [get]
 func (h *TelemetryHandler) GetHistory(c *gin.Context) {
 	sensorID := c.Query("sensor_id")
 	if sensorID == "" {

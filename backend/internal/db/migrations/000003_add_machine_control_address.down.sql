@@ -1,0 +1,1 @@
+ALTER TABLE machines DROP COLUMN IF EXISTS control_address;

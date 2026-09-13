@@ -5,13 +5,14 @@ import (
 
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/config"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/db"
+	"github.com/Niotek-Academy/iiot-platform/backend/internal/factoryio"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/handlers"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/middleware"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/service"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/ws"
 )
 
-func NewRouter(store *db.Store, cfg config.Config, hub *ws.Hub) *gin.Engine {
+func NewRouter(store *db.Store, cfg config.Config, hub *ws.Hub, ioClient factoryio.ControlClient) *gin.Engine {
 	r := gin.New()
 	r.Use(middleware.Recovery())
 	r.Use(gin.Logger())
@@ -33,6 +34,9 @@ func NewRouter(store *db.Store, cfg config.Config, hub *ws.Hub) *gin.Engine {
 
 	telemetryService := service.NewTelemetryService(store)
 	telemetryHandler := handlers.NewTelemetryHandler(telemetryService)
+
+	commandService := service.NewCommandService(store, ioClient) 
+	commandHandler := handlers.NewCommandHandler(commandService)
 
 	r.GET("/healthz", handlers.HealthCheck(store))
 	r.GET("/ws/v1/factory-stream", ws.ServeWS(hub, jwtSecret))
@@ -69,6 +73,7 @@ func NewRouter(store *db.Store, cfg config.Config, hub *ws.Hub) *gin.Engine {
 				authed.GET("/machines/:machine_id", machineHandler.GetOverview)
 				authed.GET("/telemetry", telemetryHandler.GetHistory)
 				authed.GET("/alerts", alertHandler.List)
+				authed.POST("/machines/:machine_id/command", commandHandler.Execute)
 			}
 		}
 	}

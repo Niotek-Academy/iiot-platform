@@ -1,0 +1,1 @@
+ALTER TABLE machines ADD COLUMN control_address VARCHAR(100);

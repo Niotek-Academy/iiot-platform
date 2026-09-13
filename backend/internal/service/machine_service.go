@@ -31,13 +31,32 @@ func (s *MachineService) Create(ctx context.Context, req dto.CreateMachineReques
 	}
 
 	machine, err := s.store.CreateMachine(ctx, generated.CreateMachineParams{
-		MachineID: req.MachineID,
-		Name:      req.Name,
-		Location:  req.Location,
-		Status:    status,
+		MachineID:      req.MachineID,
+		Name:           req.Name,
+		Location:       req.Location,
+		Status:         status,
+		ControlAddress: pgutil.ToText(req.ControlAddress),
 	})
 	if err != nil {
 		return generated.Machine{}, apperr.NewInternal("could not create machine")
+	}
+	return machine, nil
+}
+
+func (s *MachineService) Update(ctx context.Context, machineID string, req dto.UpdateMachineRequest) (generated.Machine, error) {
+	if _, err := s.store.GetMachine(ctx, machineID); err != nil {
+		return generated.Machine{}, apperr.NewNotFound("machine not found")
+	}
+
+	machine, err := s.store.UpdateMachine(ctx, generated.UpdateMachineParams{
+		MachineID:      machineID,
+		Name:           pgutil.ToText(req.Name),
+		Location:       pgutil.ToText(req.Location),
+		Status:         pgutil.ToText(req.Status),
+		ControlAddress: pgutil.ToText(req.ControlAddress),
+	})
+	if err != nil {
+		return generated.Machine{}, apperr.NewInternal("could not update machine")
 	}
 	return machine, nil
 }
@@ -48,23 +67,6 @@ func (s *MachineService) List(ctx context.Context) ([]generated.Machine, error) 
 		return nil, apperr.NewInternal("could not list machines")
 	}
 	return list, nil
-}
-
-func (s *MachineService) Update(ctx context.Context, machineID string, req dto.UpdateMachineRequest) (generated.Machine, error) {
-	if _, err := s.store.GetMachine(ctx, machineID); err != nil {
-		return generated.Machine{}, apperr.NewNotFound("machine not found")
-	}
-
-	machine, err := s.store.UpdateMachine(ctx, generated.UpdateMachineParams{
-		MachineID: machineID,
-		Name:      pgutil.ToText(req.Name),
-		Location:  pgutil.ToText(req.Location),
-		Status:    pgutil.ToText(req.Status),
-	})
-	if err != nil {
-		return generated.Machine{}, apperr.NewInternal("could not update machine")
-	}
-	return machine, nil
 }
 
 func (s *MachineService) Delete(ctx context.Context, machineID string) error {

@@ -17,3 +17,13 @@ type Reading struct {
 type Client interface {
 	Stream(ctx context.Context) (<-chan Reading, error)
 }
+
+type ControlClient interface {
+	EmergencyStop(ctx context.Context, machineID string) error
+	Start(ctx context.Context, machineID string) error
+}
+
+type FullClient interface {
+	Client
+	ControlClient
+}

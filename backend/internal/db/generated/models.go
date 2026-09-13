@@ -36,11 +36,12 @@ type CommandLog struct {
 }
 
 type Machine struct {
-	MachineID string             `json:"machine_id"`
-	Name      string             `json:"name"`
-	Location  string             `json:"location"`
-	Status    string             `json:"status"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	MachineID      string             `json:"machine_id"`
+	Name           string             `json:"name"`
+	Location       string             `json:"location"`
+	Status         string             `json:"status"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	ControlAddress pgtype.Text        `json:"control_address"`
 }
 
 type Sensor struct {

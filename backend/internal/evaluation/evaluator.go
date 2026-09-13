@@ -19,6 +19,10 @@ import (
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/ingestion"
 )
 
+type StopTrigger interface {
+	AutoEmergencyStop(ctx context.Context, machineID, reason string) error
+}
+
 type Evaluator struct {
 	store    *db.Store
 	ingest   *ingestion.Manager // to get the window of each machine
@@ -26,15 +30,19 @@ type Evaluator struct {
 	interval time.Duration   // time between evaluations
 	mu     sync.RWMutex
 	latest map[string]aiclient.PredictResponse
+	stopTrigger      StopTrigger
+	autoStopThreshold float64
 }
 
-func NewEvaluator(store *db.Store, ingest *ingestion.Manager, client aiclient.AIClient, interval time.Duration) *Evaluator {
+func NewEvaluator(store *db.Store, ingest *ingestion.Manager, client aiclient.AIClient, interval time.Duration, stopTrigger StopTrigger, autoStopThreshold float64) *Evaluator {
 	return &Evaluator{
-		store:    store,
-		ingest:   ingest,
-		aiClient: client,
-		interval: interval,
-		latest:   make(map[string]aiclient.PredictResponse),
+		store:             store,
+		ingest:            ingest,
+		aiClient:          client,
+		interval:          interval,
+		latest:            make(map[string]aiclient.PredictResponse),
+		stopTrigger:       stopTrigger,
+		autoStopThreshold: autoStopThreshold,
 	}
 }
 
@@ -85,6 +93,13 @@ func (e *Evaluator) evaluateOne(ctx context.Context, machineID string) {
 	e.latest[machineID] = resp
 	e.mu.Unlock()
 
+	if resp.HealthScore < e.autoStopThreshold {
+		reason := fmt.Sprintf("Health score dropped to %.1f (threshold %.1f)", resp.HealthScore, e.autoStopThreshold)
+		if err := e.stopTrigger.AutoEmergencyStop(ctx, machineID, reason); err != nil {
+			log.Printf("evaluation: auto emergency stop failed for %s: %v", machineID, err)
+		}
+	}
+	
 	if _, err := e.store.InsertAIEvaluation(ctx, generated.InsertAIEvaluationParams{
 		MachineID:   machineID,
 		HealthScore: resp.HealthScore,

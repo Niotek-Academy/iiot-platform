@@ -3,6 +3,7 @@ package factoryio
 import (
 	"context"
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -19,6 +20,8 @@ type SimulatorClient struct {
 	sensors  []*simSensor
 	interval time.Duration
 	rng      *rand.Rand
+	mu      sync.Mutex
+	stopped bool
 }
 
 func NewSimulatorClient(interval time.Duration) *SimulatorClient {
@@ -54,8 +57,16 @@ func (c *SimulatorClient) Stream(ctx context.Context) (<-chan Reading, error) {
 			case <-ctx.Done():
 				return
 			case now := <-ticker.C:
+				c.mu.Lock()
+				stopped := c.stopped
+				c.mu.Unlock()
+
 				for _, s := range c.sensors {
-					s.tick(c.rng)
+					if stopped && (s.id == "RPM_01" || s.id == "CURR_01" || s.id == "VIB_01") {
+						s.value = 0
+					} else {
+						s.tick(c.rng)
+					}
 					reading := Reading{SensorID: s.id, Value: s.value, Timestamp: now}
 					select {
 					case out <- reading:
@@ -90,4 +101,18 @@ func (s *simSensor) tick(rng *rand.Rand) {
 	if s.value > s.max {
 		s.value = s.max
 	}
+}
+
+func (c *SimulatorClient) EmergencyStop(ctx context.Context, machineID string) error {
+	c.mu.Lock()
+	c.stopped = true
+	c.mu.Unlock()
+	return nil
+}
+
+func (c *SimulatorClient) Start(ctx context.Context, machineID string) error {
+	c.mu.Lock()
+	c.stopped = false
+	c.mu.Unlock()
+	return nil
 }

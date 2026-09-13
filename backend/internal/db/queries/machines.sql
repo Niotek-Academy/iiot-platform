@@ -1,6 +1,6 @@
 -- name: CreateMachine :one
-INSERT INTO machines (machine_id, name, location, status)
-VALUES ($1, $2, $3, $4)
+INSERT INTO machines (machine_id, name, location, status, control_address)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- name: GetMachine :one
@@ -15,7 +15,8 @@ ORDER BY created_at ASC;
 UPDATE machines
 SET name = COALESCE(sqlc.narg('name'), name),
     location = COALESCE(sqlc.narg('location'), location),
-    status = COALESCE(sqlc.narg('status'), status)
+    status = COALESCE(sqlc.narg('status'), status),
+    control_address = COALESCE(sqlc.narg('control_address'), control_address)
 WHERE machine_id = sqlc.arg('machine_id')
 RETURNING *;
 

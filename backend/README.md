@@ -84,7 +84,7 @@ flowchart TB
 
 | Piece | Choice |
 |---|---|
-| Language | Go 1.22 |
+| Language | Go 1.25 |
 | Web framework | Gin |
 | DB access | sqlc (type-safe generated queries) + pgx/v5 |
 | Auth | JWT (single access token, 12h, no refresh) |

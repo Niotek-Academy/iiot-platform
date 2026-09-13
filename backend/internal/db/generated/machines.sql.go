@@ -12,16 +12,17 @@ import (
 )
 
 const createMachine = `-- name: CreateMachine :one
-INSERT INTO machines (machine_id, name, location, status)
-VALUES ($1, $2, $3, $4)
-RETURNING machine_id, name, location, status, created_at
+INSERT INTO machines (machine_id, name, location, status, control_address)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING machine_id, name, location, status, created_at, control_address
 `
 
 type CreateMachineParams struct {
-	MachineID string `json:"machine_id"`
-	Name      string `json:"name"`
-	Location  string `json:"location"`
-	Status    string `json:"status"`
+	MachineID      string      `json:"machine_id"`
+	Name           string      `json:"name"`
+	Location       string      `json:"location"`
+	Status         string      `json:"status"`
+	ControlAddress pgtype.Text `json:"control_address"`
 }
 
 func (q *Queries) CreateMachine(ctx context.Context, arg CreateMachineParams) (Machine, error) {
@@ -30,6 +31,7 @@ func (q *Queries) CreateMachine(ctx context.Context, arg CreateMachineParams) (M
 		arg.Name,
 		arg.Location,
 		arg.Status,
+		arg.ControlAddress,
 	)
 	var i Machine
 	err := row.Scan(
@@ -38,6 +40,7 @@ func (q *Queries) CreateMachine(ctx context.Context, arg CreateMachineParams) (M
 		&i.Location,
 		&i.Status,
 		&i.CreatedAt,
+		&i.ControlAddress,
 	)
 	return i, err
 }
@@ -53,7 +56,7 @@ func (q *Queries) DeleteMachine(ctx context.Context, machineID string) error {
 }
 
 const getMachine = `-- name: GetMachine :one
-SELECT machine_id, name, location, status, created_at FROM machines
+SELECT machine_id, name, location, status, created_at, control_address FROM machines
 WHERE machine_id = $1
 `
 
@@ -66,12 +69,13 @@ func (q *Queries) GetMachine(ctx context.Context, machineID string) (Machine, er
 		&i.Location,
 		&i.Status,
 		&i.CreatedAt,
+		&i.ControlAddress,
 	)
 	return i, err
 }
 
 const listMachines = `-- name: ListMachines :many
-SELECT machine_id, name, location, status, created_at FROM machines
+SELECT machine_id, name, location, status, created_at, control_address FROM machines
 ORDER BY created_at ASC
 `
 
@@ -90,6 +94,7 @@ func (q *Queries) ListMachines(ctx context.Context) ([]Machine, error) {
 			&i.Location,
 			&i.Status,
 			&i.CreatedAt,
+			&i.ControlAddress,
 		); err != nil {
 			return nil, err
 		}
@@ -105,16 +110,18 @@ const updateMachine = `-- name: UpdateMachine :one
 UPDATE machines
 SET name = COALESCE($1, name),
     location = COALESCE($2, location),
-    status = COALESCE($3, status)
-WHERE machine_id = $4
-RETURNING machine_id, name, location, status, created_at
+    status = COALESCE($3, status),
+    control_address = COALESCE($4, control_address)
+WHERE machine_id = $5
+RETURNING machine_id, name, location, status, created_at, control_address
 `
 
 type UpdateMachineParams struct {
-	Name      pgtype.Text `json:"name"`
-	Location  pgtype.Text `json:"location"`
-	Status    pgtype.Text `json:"status"`
-	MachineID string      `json:"machine_id"`
+	Name           pgtype.Text `json:"name"`
+	Location       pgtype.Text `json:"location"`
+	Status         pgtype.Text `json:"status"`
+	ControlAddress pgtype.Text `json:"control_address"`
+	MachineID      string      `json:"machine_id"`
 }
 
 func (q *Queries) UpdateMachine(ctx context.Context, arg UpdateMachineParams) (Machine, error) {
@@ -122,6 +129,7 @@ func (q *Queries) UpdateMachine(ctx context.Context, arg UpdateMachineParams) (M
 		arg.Name,
 		arg.Location,
 		arg.Status,
+		arg.ControlAddress,
 		arg.MachineID,
 	)
 	var i Machine
@@ -131,6 +139,7 @@ func (q *Queries) UpdateMachine(ctx context.Context, arg UpdateMachineParams) (M
 		&i.Location,
 		&i.Status,
 		&i.CreatedAt,
+		&i.ControlAddress,
 	)
 	return i, err
 }

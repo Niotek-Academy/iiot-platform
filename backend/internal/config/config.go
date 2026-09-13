@@ -25,6 +25,8 @@ type Config struct {
 	AIServiceMode        string // "mock" or "http"
 	AIServiceURL         string
 	AIEvalIntervalSeconds int
+
+	AutoStopHealthThreshold float64
 }
 
 func LoadConfig() Config {
@@ -56,6 +58,7 @@ func LoadConfig() Config {
 		AIServiceMode:         getEnv("AI_SERVICE_MODE", "mock"),
 		AIServiceURL:          getEnv("AI_SERVICE_URL", "http://localhost:9000"),
 		AIEvalIntervalSeconds: getEnvInt("AI_EVAL_INTERVAL_SECONDS", 5),
+		AutoStopHealthThreshold: getEnvFloat("AUTO_STOP_HEALTH_THRESHOLD", 30),
 	}
 }
 
@@ -70,6 +73,15 @@ func getEnvInt(key string, fallback int) int {
 	if v, ok := os.LookupEnv(key); ok {
 		if n, err := strconv.Atoi(v); err == nil {
 			return n
+		}
+	}
+	return fallback
+}
+
+func getEnvFloat(key string, fallback float64) float64 {
+	if v, ok := os.LookupEnv(key); ok {
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			return f
 		}
 	}
 	return fallback

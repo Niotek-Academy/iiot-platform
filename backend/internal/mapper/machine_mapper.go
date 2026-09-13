@@ -6,13 +6,17 @@ import (
 )
 
 func ToMachineResponse(m generated.Machine) dto.MachineResponse {
-	return dto.MachineResponse{
+	resp := dto.MachineResponse{
 		MachineID: m.MachineID,
 		Name:      m.Name,
 		Location:  m.Location,
 		Status:    m.Status,
 		CreatedAt: m.CreatedAt.Time,
 	}
+	if m.ControlAddress.Valid {
+		resp.ControlAddress = &m.ControlAddress.String
+	}
+	return resp
 }
 
 func ToMachineResponseList(list []generated.Machine) []dto.MachineResponse {

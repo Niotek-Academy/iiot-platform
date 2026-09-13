@@ -28,6 +28,8 @@ type Manager struct {
 
 	bufferCapacity   int
 	snapshotInterval time.Duration
+
+	controlAddress map[string]string
 }
 
 func NewManager(store *db.Store, bufferCapacity int, snapshotInterval time.Duration) *Manager {
@@ -181,6 +183,36 @@ func (m *Manager) KnownMachines() []string {
 	out := make([]string, 0, len(m.states))
 	for id := range m.states {
 		out = append(out, id)
+	}
+	return out
+}
+
+func (m *Manager) LoadControlAddresses(ctx context.Context) error {
+	machines, err := m.store.ListMachines(ctx)
+	if err != nil {
+		return err
+	}
+
+	addresses := make(map[string]string, len(machines))
+	for _, mch := range machines {
+		if mch.ControlAddress.Valid && mch.ControlAddress.String != "" {
+			addresses[mch.MachineID] = mch.ControlAddress.String
+		}
+	}
+
+	m.mu.Lock()
+	m.controlAddress = addresses
+	m.mu.Unlock()
+	return nil
+}
+
+func (m *Manager) ControlAddresses() map[string]string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	out := make(map[string]string, len(m.controlAddress))
+	for k, v := range m.controlAddress {
+		out[k] = v
 	}
 	return out
 }

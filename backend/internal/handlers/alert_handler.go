@@ -21,6 +21,15 @@ func NewAlertHandler(s *service.AlertService) *AlertHandler {
 	return &AlertHandler{service: s}
 }
 
+// List godoc
+// @Summary      List alerts for a machine
+// @Tags         alerts
+// @Security     BearerAuth
+// @Produce      json
+// @Param        machine_id  query string true  "Machine ID"
+// @Param        is_resolved query bool   false "Filter by resolved status"
+// @Success      200  {object}  response.Envelope{data=dto.AlertsResponse}
+// @Router       /alerts [get]
 func (h *AlertHandler) List(c *gin.Context) {
 	machineID := c.Query("machine_id")
 	if machineID == "" {

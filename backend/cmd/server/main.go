@@ -19,6 +19,19 @@ import (
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/ws"
 )
 
+// @title           IIoT Smart Analytics Platform API
+// @version         1.0
+// @description     REST + WebSocket API for the IIoT Smart Analytics & Predictive Maintenance Platform.
+// @contact.name    Niotek Academy
+// @contact.url     https://github.com/Niotek-Academy
+
+// @host      localhost:8080
+// @BasePath  /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in                         header
+// @name                       Authorization
+// @description                Type "Bearer" followed by a space and the JWT token.
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

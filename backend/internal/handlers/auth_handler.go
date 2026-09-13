@@ -22,6 +22,16 @@ func NewAuthHandler(service *service.AuthService) *AuthHandler {
 	}
 }
 
+// Login godoc
+// @Summary      Log in
+// @Description  Returns a JWT access token (12h expiry, no refresh)
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.LoginRequest true "Credentials"
+// @Success      200  {object}  response.Envelope{data=dto.AuthResponse}
+// @Failure      401  {object}  response.Envelope
+// @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context)  {
 	var req dto.LoginRequest
 	if !BindJSON(c, &req) {
@@ -43,6 +53,16 @@ func (h *AuthHandler) Login(c *gin.Context)  {
 	)
 }
 
+// Register godoc
+// @Summary      Register a new user
+// @Description  First user in the system becomes ADMIN automatically (no token needed). Every user after that requires an ADMIN token.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.RegisterRequest true "New user"
+// @Success      201  {object}  response.Envelope{data=dto.UserResponse}
+// @Failure      403  {object}  response.Envelope
+// @Router       /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if !BindJSON(c, &req) {

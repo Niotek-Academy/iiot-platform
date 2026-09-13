@@ -1,0 +1,684 @@
+basePath: /api/v1
+definitions:
+  dto.AlertResponse:
+    properties:
+      alert_id:
+        type: integer
+      created_at:
+        type: string
+      is_resolved:
+        type: boolean
+      message:
+        type: string
+      severity:
+        type: string
+    type: object
+  dto.AlertsResponse:
+    properties:
+      alerts:
+        items:
+          $ref: '#/definitions/dto.AlertResponse'
+        type: array
+      machine_id:
+        type: string
+    type: object
+  dto.AuthResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.CommandRequest:
+    properties:
+      command:
+        enum:
+        - EMERGENCY_STOP
+        - START
+        - RESET_ALERTS
+        type: string
+      reason:
+        maxLength: 255
+        type: string
+    required:
+    - command
+    - reason
+    type: object
+  dto.CommandResponse:
+    properties:
+      command:
+        type: string
+      command_id:
+        type: integer
+      executed_at:
+        type: string
+      machine_id:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.CreateMachineRequest:
+    properties:
+      control_address:
+        description: OPC UA NodeID / Modbus register for this machine's stop line
+        maxLength: 100
+        type: string
+      location:
+        maxLength: 100
+        type: string
+      machine_id:
+        maxLength: 50
+        minLength: 3
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      status:
+        enum:
+        - OPERATIONAL
+        - WARNING
+        - CRITICAL
+        - STOPPED
+        type: string
+    required:
+    - location
+    - machine_id
+    - name
+    type: object
+  dto.CreateSensorRequest:
+    properties:
+      machine_id:
+        type: string
+      metric_name:
+        maxLength: 50
+        type: string
+      sensor_id:
+        maxLength: 50
+        minLength: 2
+        type: string
+      source_address:
+        maxLength: 100
+        type: string
+      unit:
+        maxLength: 20
+        type: string
+    required:
+    - machine_id
+    - metric_name
+    - sensor_id
+    - unit
+    type: object
+  dto.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  dto.MachineOverviewResponse:
+    properties:
+      active_alerts_count:
+        type: integer
+      current_health_score:
+        type: number
+      location:
+        type: string
+      machine_id:
+        type: string
+      name:
+        type: string
+      rul_hours:
+        type: number
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.MachineResponse:
+    properties:
+      control_address:
+        type: string
+      created_at:
+        type: string
+      location:
+        type: string
+      machine_id:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.RegisterRequest:
+    properties:
+      password:
+        minLength: 8
+        type: string
+      role:
+        enum:
+        - ADMIN
+        - OPERATOR
+        type: string
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  dto.SensorResponse:
+    properties:
+      created_at:
+        type: string
+      machine_id:
+        type: string
+      metric_name:
+        type: string
+      sensor_id:
+        type: string
+      source_address:
+        type: string
+      unit:
+        type: string
+    type: object
+  dto.TelemetryDataPoint:
+    properties:
+      recorded_at:
+        type: string
+      value:
+        type: number
+    type: object
+  dto.TelemetryResponse:
+    properties:
+      count:
+        type: integer
+      data_points:
+        items:
+          $ref: '#/definitions/dto.TelemetryDataPoint'
+        type: array
+      sensor_id:
+        type: string
+      unit:
+        type: string
+    type: object
+  dto.UpdateMachineRequest:
+    properties:
+      control_address:
+        maxLength: 100
+        type: string
+      location:
+        maxLength: 100
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      status:
+        enum:
+        - OPERATIONAL
+        - WARNING
+        - CRITICAL
+        - STOPPED
+        type: string
+    type: object
+  dto.UserResponse:
+    properties:
+      created_at:
+        type: string
+      role:
+        type: string
+      user_id:
+        type: integer
+      username:
+        type: string
+    type: object
+  response.Envelope:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/response.ErrorBody'
+      success:
+        type: boolean
+    type: object
+  response.ErrorBody:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: Niotek Academy
+    url: https://github.com/Niotek-Academy
+  description: REST + WebSocket API for the IIoT Smart Analytics & Predictive Maintenance
+    Platform.
+  title: IIoT Smart Analytics Platform API
+  version: "1.0"
+paths:
+  /alerts:
+    get:
+      parameters:
+      - description: Machine ID
+        in: query
+        name: machine_id
+        required: true
+        type: string
+      - description: Filter by resolved status
+        in: query
+        name: is_resolved
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AlertsResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List alerts for a machine
+      tags:
+      - alerts
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Returns a JWT access token (12h expiry, no refresh)
+      parameters:
+      - description: Credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AuthResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      summary: Log in
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: First user in the system becomes ADMIN automatically (no token
+        needed). Every user after that requires an ADMIN token.
+      parameters:
+      - description: New user
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      summary: Register a new user
+      tags:
+      - auth
+  /machines:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MachineResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List all machines
+      tags:
+      - machines
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Machine
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMachineRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MachineResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Register a machine
+      tags:
+      - machines
+  /machines/{machine_id}:
+    delete:
+      parameters:
+      - description: Machine ID
+        in: path
+        name: machine_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Delete a machine
+      tags:
+      - machines
+    get:
+      description: health_score/rul_hours
+      parameters:
+      - description: Machine ID
+        in: path
+        name: machine_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MachineOverviewResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Machine status + health summary
+      tags:
+      - machines
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Machine ID
+        in: path
+        name: machine_id
+        required: true
+        type: string
+      - description: Fields to change
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMachineRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MachineResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Partially update a machine
+      tags:
+      - machines
+  /machines/{machine_id}/command:
+    post:
+      consumes:
+      - application/json
+      description: issued_by is taken from the JWT, never from the request body
+      parameters:
+      - description: Machine ID
+        in: path
+        name: machine_id
+        required: true
+        type: string
+      - description: Command
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CommandRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CommandResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Send a control command to a machine
+      tags:
+      - commands
+  /sensors:
+    get:
+      description: Returns all sensors if machine_id is omitted, otherwise only that
+        machine's sensors
+      parameters:
+      - description: Filter by machine
+        in: query
+        name: machine_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.SensorResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List sensors
+      tags:
+      - sensors
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sensor
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSensorRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SensorResponse'
+              type: object
+        "400":
+          description: machine_id does not exist
+          schema:
+            $ref: '#/definitions/response.Envelope'
+        "409":
+          description: sensor_id already exists
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Register a sensor
+      tags:
+      - sensors
+  /sensors/{sensor_id}:
+    delete:
+      parameters:
+      - description: Sensor ID
+        in: path
+        name: sensor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Delete a sensor
+      tags:
+      - sensors
+    get:
+      parameters:
+      - description: Sensor ID
+        in: path
+        name: sensor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SensorResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get one sensor
+      tags:
+      - sensors
+  /telemetry:
+    get:
+      parameters:
+      - description: Sensor ID
+        in: query
+        name: sensor_id
+        required: true
+        type: string
+      - description: Max data points (default 50, max 1000)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TelemetryResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Historical telemetry for one sensor
+      tags:
+      - telemetry
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and the JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

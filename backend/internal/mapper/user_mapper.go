@@ -13,3 +13,11 @@ func ToUserResponse(u generated.User) dto.UserResponse {
 		CreatedAt: u.CreatedAt.Time, // pgtype.Timestamptz -> time.Time
 	}
 }
+
+func ToUserResponseList(list []generated.User) []dto.UserResponse {
+	out := make([]dto.UserResponse, 0, len(list))
+	for _, u := range list {
+		out = append(out, ToUserResponse(u))
+	}
+	return out
+}

@@ -14,3 +14,15 @@ type CommandResponse struct {
 	Status     string    `json:"status"`
 	ExecutedAt time.Time `json:"executed_at"`
 }
+type CommandLogResponse struct {
+	CommandID   int64     `json:"command_id"`
+	CommandType string    `json:"command_type"`
+	IssuedBy    string    `json:"issued_by"`
+	Reason      string    `json:"reason"`
+	ExecutedAt  time.Time `json:"executed_at"`
+}
+
+type CommandLogsResponse struct {
+	MachineID string                `json:"machine_id"`
+	Commands  []CommandLogResponse `json:"commands"`
+}

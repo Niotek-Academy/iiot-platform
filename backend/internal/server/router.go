@@ -43,6 +43,9 @@ func NewRouter(store *db.Store, cfg config.Config, hub *ws.Hub, ioClient factory
 	commandService := service.NewCommandService(store, ioClient) 
 	commandHandler := handlers.NewCommandHandler(commandService)
 
+	userService := service.NewUserService(store)
+	userHandler := handlers.NewUserHandler(userService)
+
 	r.GET("/healthz", handlers.HealthCheck(store))
 	r.GET("/ws/v1/factory-stream", ws.ServeWS(hub, jwtSecret))
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -71,6 +74,10 @@ func NewRouter(store *db.Store, cfg config.Config, hub *ws.Hub, ioClient factory
 				sensors.GET("/:sensor_id", sensorHandler.GetByID)
 				sensors.GET("", sensorHandler.List) // ?machine_id=...
 				sensors.DELETE("/:sensor_id", sensorHandler.Delete)
+
+				users := admin.Group("/users")
+				users.GET("", userHandler.List)
+				users.PATCH("/:user_id/role", userHandler.UpdateRole)
 			}
 			
 			authed := api.Group("")
@@ -80,6 +87,7 @@ func NewRouter(store *db.Store, cfg config.Config, hub *ws.Hub, ioClient factory
 				authed.GET("/telemetry", telemetryHandler.GetHistory)
 				authed.GET("/alerts", alertHandler.List)
 				authed.POST("/machines/:machine_id/command", commandHandler.Execute)
+				authed.GET("/machines/:machine_id/commands", commandHandler.GetHistory)
 			}
 		}
 	}

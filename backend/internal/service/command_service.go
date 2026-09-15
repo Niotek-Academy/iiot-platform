@@ -16,6 +16,7 @@ const (
 	CommandEmergencyStop = "EMERGENCY_STOP"
 	CommandStart         = "START"
 	CommandResetAlerts   = "RESET_ALERTS"
+	defaultCommandHistoryLimit = 50
 )
 
 type CommandService struct {
@@ -101,4 +102,19 @@ func (s *CommandService) resetAlerts(ctx context.Context, machineID string) erro
 		}
 	}
 	return nil
+}
+
+func (s *CommandService) ListHistory(ctx context.Context, machineID string, limit int32) ([]generated.CommandLog, error) {
+	if _, err := s.store.GetMachine(ctx, machineID); err != nil {
+		return nil, apperr.NewNotFound("machine not found")
+	}
+
+	logs, err := s.store.ListCommandLogsByMachine(ctx, generated.ListCommandLogsByMachineParams{
+		MachineID: machineID,
+		Limit:     limit,
+	})
+	if err != nil {
+		return nil, apperr.NewInternal("could not fetch command history")
+	}
+	return logs, nil
 }

@@ -2,10 +2,13 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/Niotek-Academy/iiot-platform/backend/internal/apperr"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/dto"
+	"github.com/Niotek-Academy/iiot-platform/backend/internal/mapper"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/response"
 	"github.com/Niotek-Academy/iiot-platform/backend/internal/service"
 )
@@ -55,5 +58,40 @@ func (h *CommandHandler) Execute(c *gin.Context) {
 		Command:    logEntry.CommandType,
 		Status:     "SUCCESSFULLY_EXECUTED",
 		ExecutedAt: logEntry.ExecutedAt.Time,
+	})
+}
+
+// GetHistory godoc
+// @Summary      Command history for a machine
+// @Tags         commands
+// @Security     BearerAuth
+// @Produce      json
+// @Param        machine_id path string true "Machine ID"
+// @Param        limit      query int    false "Max entries (default 50)"
+// @Success      200  {object}  response.Envelope{data=dto.CommandLogsResponse}
+// @Failure      404  {object}  response.Envelope
+// @Router       /machines/{machine_id}/commands [get]
+func (h *CommandHandler) GetHistory(c *gin.Context) {
+	machineID := c.Param("machine_id")
+
+	limit := int32(50)
+	if raw := c.Query("limit"); raw != "" {
+		parsed, err := strconv.Atoi(raw)
+		if err != nil || parsed <= 0 {
+			c.Error(apperr.NewBadRequest("limit must be a positive integer"))
+			return
+		}
+		limit = int32(parsed)
+	}
+
+	logs, err := h.service.ListHistory(c.Request.Context(), machineID, limit)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, dto.CommandLogsResponse{
+		MachineID: machineID,
+		Commands:  mapper.ToCommandLogResponseList(logs),
 	})
 }

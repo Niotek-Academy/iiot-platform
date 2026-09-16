@@ -176,10 +176,13 @@ running `swag init`).
 | GET | `/api/v1/sensors?machine_id=` | ADMIN |
 | GET | `/api/v1/sensors/{id}` | ADMIN |
 | DELETE | `/api/v1/sensors/{id}` | ADMIN |
+| GET | `/api/v1/users` | ADMIN |
+| PATCH | `/api/v1/users/{id}/role` | ADMIN |
 | GET | `/api/v1/machines/{id}` | any |
 | GET | `/api/v1/telemetry?sensor_id=&limit=` | any |
 | GET | `/api/v1/alerts?machine_id=&is_resolved=` | any |
 | POST | `/api/v1/machines/{id}/command` | any |
+| GET | `/api/v1/machines/{id}/commands?limit=10` | any |
 | GET | `/ws/v1/factory-stream?token=&machine_id=` | JWT via query param | 
 | GET | `/healthz` | none | 
 

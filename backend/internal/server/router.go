@@ -63,29 +63,30 @@ func NewRouter(store *db.Store, cfg config.Config, hub *ws.Hub, ioClient factory
 
 			admin := api.Group("")
 			admin.Use(middleware.Auth(jwtSecret))
-			admin.Use(middleware.RequireRole("ADMIN")) // Authrize Admin role
+			admin.Use(middleware.RequireRole("ADMIN"))
 			{
 				machines := admin.Group("/machines")
 				machines.POST("", machineHandler.Create)
-				machines.GET("", machineHandler.List)
 				machines.PATCH("/:machine_id", machineHandler.Update)
 				machines.DELETE("/:machine_id", machineHandler.Delete)
 
 				sensors := admin.Group("/sensors")
 				sensors.POST("", sensorHandler.Create)
-				sensors.GET("/:sensor_id", sensorHandler.GetByID)
-				sensors.GET("", sensorHandler.List) // ?machine_id=...
 				sensors.DELETE("/:sensor_id", sensorHandler.Delete)
 
 				users := admin.Group("/users")
-				users.GET("", userHandler.List)
+				users.GET("", userHandler.List) 
 				users.PATCH("/:user_id/role", userHandler.UpdateRole)
 			}
-			
+
+			// Any authenticated user: read operations
 			authed := api.Group("")
 			authed.Use(middleware.Auth(jwtSecret))
 			{
+				authed.GET("/machines", machineHandler.List)                          
 				authed.GET("/machines/:machine_id", machineHandler.GetOverview)
+				authed.GET("/sensors", sensorHandler.List)                             
+				authed.GET("/sensors/:sensor_id", sensorHandler.GetByID)               
 				authed.GET("/telemetry", telemetryHandler.GetHistory)
 				authed.GET("/alerts", alertHandler.List)
 				authed.POST("/machines/:machine_id/command", commandHandler.Execute)

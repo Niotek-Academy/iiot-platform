@@ -19,9 +19,11 @@ import (
 
 func NewRouter(store *db.Store, cfg config.Config, hub *ws.Hub, ioClient factoryio.ControlClient) *gin.Engine {
 	r := gin.New()
+	r.Use(middleware.CORS(cfg.CORSAllowedOrigins))
 	r.Use(middleware.Recovery())
 	r.Use(gin.Logger())
 	r.Use(middleware.ErrorHandler())
+
 
 	jwtSecret := []byte(cfg.JWTSecret)
 

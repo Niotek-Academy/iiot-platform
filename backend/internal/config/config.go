@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -27,6 +28,8 @@ type Config struct {
 	AIEvalIntervalSeconds int
 
 	AutoStopHealthThreshold float64
+
+	CORSAllowedOrigins []string
 }
 
 func LoadConfig() Config {
@@ -59,6 +62,7 @@ func LoadConfig() Config {
 		AIServiceURL:          getEnv("AI_SERVICE_URL", "http://localhost:9000"),
 		AIEvalIntervalSeconds: getEnvInt("AI_EVAL_INTERVAL_SECONDS", 5),
 		AutoStopHealthThreshold: getEnvFloat("AUTO_STOP_HEALTH_THRESHOLD", 30),
+		CORSAllowedOrigins: strings.Split(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"), ","),
 	}
 }
 
